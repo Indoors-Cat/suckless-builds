@@ -10,3 +10,7 @@
 - RotateStack (Allows moving windows through the stack)
 - SysTray (Adds a systray to the statusbar)
 - UselessGap (Adds purly aesthetic gaps between windows)
+
+# Installation:
+
+- Once downloaded, make sure to place the ".dwm" folder & autostart.sh script at /home/$USER/.dwm so that they autostart patch will work correctly. 
