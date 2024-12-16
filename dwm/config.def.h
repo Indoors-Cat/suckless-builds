@@ -1,6 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 
 #define SESSION_FILE "/tmp/dwm-session"
+#include <X11/XF86keysym.h>
 
 /* appearance */
 static const unsigned int borderpx  = 3;        /* border pixel of windows */
@@ -15,15 +16,16 @@ static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 static const char *fonts[]          = { "monospace:size=14" };
 static const char dmenufont[]       = "monospace:size=10";
-static const char col_gray1[]       = "#222222";	/* this is the main bar color (underneath the icons) */
+static const char col_gray1[]       = "#1e1e2e";	/* this is the main bar color (underneath the icons) */
 static const char col_gray2[]       = "#444444";
-static const char col_gray3[]       = "#8be9fd";	/* This is the color of the icons themselves */
-static const char col_gray4[]       = "#eeeeee";	/* This is the workspace icon, & window name color */
-static const char col_cyan[]        = "#bd93f9";	/* This is the color of the bar itself */
+static const char col_gray3[]       = "#cba6f7";	/* This is the color of the icons themselves */
+static const char col_gray4[]       = "#74c7ec";	/* This is the workspace icon, & window name color */
+static const char col_cyan[]        = "#1e1e2e";	/* This is the color of the bar itself */
+static const char col_border[]      = "#cba6f7"; /* Color of the window border */
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
-	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
-	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
+	[SchemeNorm] = { col_gray3, col_gray1, col_cyan },
+	[SchemeSel]  = { col_gray4, col_cyan,  col_border  },
 };
 
 /* tagging */
@@ -36,11 +38,15 @@ static const Rule rules[] = {
 	 *	WM_NAME(STRING) = title
 	 */
 	/* class      instance    title       tags mask     isfloating   monitor */
-	{ "Cider",		NULL,	NULL,	1 << 3,		0,	-1 },
-	{ "Spotify",		NULL,	NULL,	1 << 3,		0,	-1 },
-	{ "ckb-next",		NULL,	NULL,	1 << 8,		0,	-1 },
-	{ "steam",		NULL,	NULL,	1 << 5,		0,	-1 },
-	{ "Virt-Manager",	NULL,	NULL,	1 << 7,		0,	-1 },
+  { "vscodium",           NULL, NULL, 1 << 1,   0,  -1 },
+	{ "Cider",		          NULL,	NULL,	1 << 3,		0,	-1 },
+	{ "Spotify",		        NULL,	NULL,	1 << 3,		0,	-1 },
+	{ "steam",		          NULL,	NULL,	1 << 5,		0,	-1 },
+  { "obsidian",           NULL, NULL, 1 << 6,   0,  -1 },
+  { "TriliumNext Notes",  NULL, NULL, 1 << 6,   0,  -1 },
+  { "Mail",               NULL, NULL, 1 << 6,   0,  -1 },
+	{ "Virt-manager",	      NULL,	NULL,	1 << 7,		0,	-1 },
+	{ "ckb-next",		        NULL,	NULL,	1 << 8,		0,	-1 },
 	/* { "Firefox",  NULL,       NULL,       1 << 8,       0,           -1 }, */
 };
 
@@ -74,63 +80,66 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
+
 /* Application Variables: */
-static const char *browser[] = { "firefox-esr", NULL };
-//static const char *browser[] = { "brave", NULL };
+static const char *browser[] = { "flatpak", "run", "io.github.zen_browser.zen", NULL };
+static const char *browser2[] = { "firefox-esr", NULL };
+static const char *calc[] = { "rofi", "-show", "calc", NULL };
+static const char *editor[] = { "kitty", "nvim", NULL };
 static const char *editor2[] = { "codium", NULL };
 static const char *files[] = { "nemo", NULL };
-static const char *music[] = { "cider", NULL };
-/*static const char *music[] = { "spotify", NULL }; */
+/* static const char *music[] = { "cider", NULL }; */
+static const char *music[] = { "spotify", NULL };
+static const char *runp[] = { "rofi", "-show", "drun", "-show-icons", NULL };
+static const char *prompt[] = { "rofi", "-show", "run", "-show-icons", NULL };
 static const char *termcmd[]  = { "st", NULL };
+static const char *term2[]  = { "kitty", "zsh", NULL };
 static const char *virt[] = { "virt-manager", NULL };
 
+/* Multimedia Variables: */
+static const char *mutecmd[] = { "pactl", "set-sink-mute", "0", "toggle", NULL };
+static const char *volup[] = { "pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%", NULL };
+static const char *voldown[] = { "pactl", "set-sink-volume", "@DEFAULT_SINK@", "-5%", NULL };
+static const char *playpause[] = { "playerctl", "play-pause", NULL };
+static const char *tracknext[] = { "playerctl", "next", NULL };
+static const char *trackprev[] = { "playerctl", "previous", NULL };
+static const char *trackstop[] = { "playerctl", "stop", NULL };
+
+/* KEYBINDINGS: */
 static const Key keys[] = {
-	/* modifier                     key        function        argument */
+
+// DWM System Controls:
+	{ MODKEY,			        XK_q,	killclient,	{0} },
+	{ MODKEY|ShiftMask,   XK_q, quit,       {0} },
+	{ MODKEY|ShiftMask,		XK_r, quit,       {1} }, 
+  //{ MODKEY|ShiftMask,   XK_l, spawn,      SHCMD("rofi -show power-menu -modi 'power-menu:rofi-power-menu'") }, //This just errors out
+	{ Mod1Mask,           XK_b, togglebar,  {0} },
+
 // Applications:
-	{ MODKEY,			XK_b,	spawn,	{.v = browser } },
-	//{ MODKEY|ShiftMask,		XK_b,	spawn,	{.v = browser2 } },
-	{ MODKEY,			XK_e,	spawn,	SHCMD("kitty -e nvim") },
-	{ MODKEY|ShiftMask,		XK_e,	spawn,	{.v = editor2 } },
-	{ MODKEY,			XK_f,	spawn,	{.v = files } },
-	{ MODKEY,			XK_m,	spawn,	{.v = music } },
-	{ MODKEY,			XK_r,	spawn,	SHCMD("rofi -show drun -show-icons") },
-	//{ MODKEY,                       XK_p,   spawn,  {.v = dmenucmd } },
-	{ MODKEY,			XK_p,	spawn,	SHCMD("rofi -show run -show-icons") },
-	{ MODKEY,			XK_t,	spawn,	{.v = termcmd } },
-	{ MODKEY|ShiftMask,		XK_t,	spawn,	SHCMD("kitty -e zsh") },
-	{ MODKEY|ShiftMask,             XK_Return, spawn,	{.v = termcmd } },
-	{ Mod1Mask,			XK_Tab,	spawn,	SHCMD("rofi -show window") },
-	{ MODKEY,			XK_c,	spawn,	SHCMD("rofi -show calc") },
-	//This is broken atm: { MODKEY|ControlMask,		XK_l,	spawn,	SHCMD("rofi -show power-menu -modi 'power-menu:rofi-power-menu'") },
-	{ MODKEY,			XK_v,	spawn,	{.v = virt } },
+	{ MODKEY,			        XK_b,	  spawn,	{.v = browser } }, // Needs fixing
+	{ MODKEY|ShiftMask,		XK_b,	  spawn,	{.v = browser2 } },
+  { MODKEY,             XK_c,   spawn,  {.v = calc } },
+	{ MODKEY,			        XK_e,	  spawn,	{.v = editor } },
+	{ MODKEY|ShiftMask,		XK_e,	  spawn,	{.v = editor2 } },
+	{ MODKEY,			        XK_f,	  spawn,	{.v = files } },
+	{ MODKEY,			        XK_m,	  spawn,	{.v = music } },
+	{ MODKEY,			        XK_r,	  spawn,	{.v = runp } },
+  { MODKEY,             XK_p,   spawn,  {.v = prompt } },
+	{ MODKEY,			        XK_t,	  spawn,	{.v = termcmd } },
+	{ MODKEY|ShiftMask,		XK_t,	  spawn,	{.v = term2 } },
+	//{ MODKEY|ShiftMask,   XK_Return, spawn,	{.v = termcmd } },
+	{ MODKEY,			        XK_v,	  spawn,	{.v = virt } },
+	{ Mod1Mask,			      XK_Tab,	spawn,	SHCMD("rofi -show window") },
+
 // Multimedia Keys:
-	//{ 0,				XK86AudioPlay,	spawn,	SCHMD("playerctl play-pause") },
-// Window Management:
-	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
-	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
-	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
-	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
-	{ MODKEY|ShiftMask,		XK_j,	rotatestack,	{.i = +1 } },
-	{ MODKEY|ShiftMask,		XK_k,	rotatestack,	{.i = -1 } },
-	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
-	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
-	{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
-	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
-	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
-	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
-// Layout Management: 
-	{ Mod1Mask,                     XK_t,      setlayout,      {.v = &layouts[0]} },
-	{ Mod1Mask,                     XK_f,      setlayout,      {.v = &layouts[1]} },
-	{ Mod1Mask,                     XK_m,      setlayout,      {.v = &layouts[2]} },
-	{ Mod1Mask,			XK_c,	   setlayout,	   {.v = &layouts[3]} },
-	{ Mod1Mask,			XK_comma,  cyclelayout,    {.i = -1 } },
-	{ Mod1Mask,			XK_period, cyclelayout,    {.i = +1 } },
-	{ MODKEY,                       XK_space,  setlayout,      {0} },
-	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
-	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
-	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
-	{ MODKEY,                       XK_Return, zoom,           {0} },
-	{ MODKEY,                       XK_Tab,    view,           {0} },
+  { 0, XF86XK_AudioPlay, spawn, {.v = playpause } },
+  { 0, XF86XK_AudioNext, spawn, {.v = tracknext } },
+  { 0, XF86XK_AudioPrev, spawn, {.v = trackprev } },
+  { 0, XF86XK_AudioStop, spawn, {.v = trackstop } },
+  { 0, XF86XK_AudioMute, spawn, {.v = mutecmd } },
+  { 0, XF86XK_AudioRaiseVolume, spawn, {.v = volup } },
+  { 0, XF86XK_AudioLowerVolume, spawn, {.v = voldown } },
+
 // Workspace Controls:
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
@@ -141,11 +150,35 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
-// DWM System Controls:
-	{ Mod1Mask,                     XK_b,      togglebar,      {0} },
-	{ MODKEY,			XK_q,	killclient,	{0} },
-	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
-	{ MODKEY|ShiftMask,		XK_r,      quit,           {1} }, 
+	{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
+	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
+	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
+	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
+
+// Window Management:
+	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
+	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
+	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
+	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
+	{ MODKEY|ShiftMask,		          XK_j,	     rotatestack,	   {.i = +1 } },
+	{ MODKEY|ShiftMask,		          XK_k,	     rotatestack,	   {.i = -1 } },
+	{ MODKEY|ControlMask,           XK_h,      setmfact,       {.f = -0.05} },
+	{ MODKEY|ControlMask,           XK_l,      setmfact,       {.f = +0.05} },
+
+// Layout Management: 
+	{ MODKEY,			                  XK_Tab,    cyclelayout,    {.i = +1 } },
+	{ MODKEY|ShiftMask,			        XK_Tab,    cyclelayout,    {.i = -1 } },
+	{ MODKEY,                       XK_z,      togglefloating, {0} },
+  { MODKEY,                       XK_x,      togglefullscr,  {0} },
+	//{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
+	//{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
+	//{ MODKEY,                       XK_Return, zoom,           {0} },
+	{ MODKEY|Mod1Mask,              XK_Tab,    view,           {0} },
+	//{ MODKEY,                       XK_space,  setlayout,      {0} },
+	{ Mod1Mask,                     XK_t,      setlayout,      {.v = &layouts[0]} },
+	{ Mod1Mask,                     XK_f,      setlayout,      {.v = &layouts[1]} },
+	{ Mod1Mask,                     XK_m,      setlayout,      {.v = &layouts[2]} },
+	{ Mod1Mask,			                XK_c,	     setlayout,	     {.v = &layouts[3]} },
 };
 
 /* button definitions */
