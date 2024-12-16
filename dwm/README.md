@@ -1,5 +1,6 @@
 # Patches:
 
+- ActualFullscreen (Makes a true fullscreen keybinding available)
 - AttachBelow (Makes new window spawn below window with focus, instead of taking master spot)
 - Autostart (Allows having autostart script in ~/.dwm folder)
     - Can use cool-autostart if you'd rather have this functionality included in the dwm.c file
