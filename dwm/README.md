@@ -14,4 +14,7 @@
 
 # Installation:
 
-- Once downloaded, make sure to place the ".dwm" folder & autostart.sh script at /home/$USER/.dwm so that they autostart patch will work correctly. 
+1. Once cloned, make sure to place the ".dwm" folder & "autostart.sh" script in /$HOME/.dwm so that the autostart patch will work. 
+2. To install you'll need to run `sudo make clean install`. This will compile dwm & install it. 
+3. If you're using a login manager (LightDM, SDDM, etc.) you'll need to add a .desktop file to your /usr/share/xsessions/ folder.
+4. Logout of your current session & log into DWM. 
